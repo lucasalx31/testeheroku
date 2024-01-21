@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 from flask import Flask, render_template, request, send_file, redirect, url_for
 import io
+import os
 
 app = Flask(__name__)
 
@@ -90,4 +91,6 @@ def consulta():
         return {'error': str(e)}
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Use a porta 8080 se executando localmente
+    port = 8080
+    app.run(host='0.0.0.0', port=port)
