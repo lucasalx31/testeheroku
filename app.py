@@ -26,7 +26,9 @@ def buscar_abuse_ip(ip_address):
 
 def processar_arquivo(file):
     try:
-        data_frame = pd.read_excel(file)
+        # Ler dados do arquivo em um buffer de bytes
+        file_buffer = io.BytesIO(file.read())
+        data_frame = pd.read_excel(file_buffer)
 
         # Adicionar colunas para armazenar resultados
         data_frame['ipAddress'] = ''
@@ -91,6 +93,6 @@ def consulta():
         return {'error': str(e)}
 
 if __name__ == "__main__":
-    # Use a porta 8080 se executando localmente ok
+    # Use a porta 8080 se executando localmente
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port)
