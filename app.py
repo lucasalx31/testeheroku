@@ -56,6 +56,29 @@ def adicionar_dados_ao_dataframe(data_frame):
         data_frame['numDistinctUsers'] = ''
         data_frame['lastReportedAt'] = ''
 
+        # Buscar informações do IP para cada linha
+        for index, row in data_frame.iterrows():
+            ip_address = row['Source']
+            result = buscar_abuse_ip(ip_address)
+
+            if 'error' not in result:
+                decoded_response = result.get('data', {})
+                # Adiciona os dados ao DataFrame
+                data_frame.at[index, 'ipAddress'] = decoded_response.get('ipAddress', '')
+                data_frame.at[index, 'isPublic'] = decoded_response.get('isPublic', '')
+                data_frame.at[index, 'ipVersion'] = decoded_response.get('ipVersion', '')
+                data_frame.at[index, 'isWhitelisted'] = decoded_response.get('isWhitelisted', '')
+                data_frame.at[index, 'abuseConfidenceScore'] = decoded_response.get('abuseConfidenceScore', '')
+                data_frame.at[index, 'countryCode'] = decoded_response.get('countryCode', '')
+                data_frame.at[index, 'usageType'] = decoded_response.get('usageType', '')
+                data_frame.at[index, 'isp'] = decoded_response.get('isp', '')
+                data_frame.at[index, 'domain'] = decoded_response.get('domain', '')
+                data_frame.at[index, 'hostnames'] = decoded_response.get('hostnames', '')
+                data_frame.at[index, 'isTor'] = decoded_response.get('isTor', '')
+                data_frame.at[index, 'totalReports'] = decoded_response.get('totalReports', '')
+                data_frame.at[index, 'numDistinctUsers'] = decoded_response.get('numDistinctUsers', '')
+                data_frame.at[index, 'lastReportedAt'] = decoded_response.get('lastReportedAt', '')
+
         return data_frame
 
     except Exception as e:
