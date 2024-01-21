@@ -27,10 +27,7 @@ def buscar_abuse_ip(ip_address):
 def processar_arquivo(file):
     try:
         # Ler dados do arquivo em um buffer de bytes
-        file_buffer = io.BytesIO()
-        file.save(file_buffer)
-        file_buffer.seek(0)
-        
+        file_buffer = io.BytesIO(file.read())
         data_frame = pd.read_excel(file_buffer)
 
         # Adicionar colunas para armazenar resultados
@@ -81,6 +78,7 @@ def processar_arquivo(file):
 
     except Exception as e:
         return {'error': str(e)}
+
 
 
 @app.route('/')
