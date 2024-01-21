@@ -1,6 +1,6 @@
 import pandas as pd
 import requests
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, send_file, redirect, url_for, send_from_directory
 import io
 import os
 
@@ -118,6 +118,11 @@ def consulta():
 
     except Exception as e:
         return {'error': str(e)}
+
+# Mapear o endpoint /favicon.ico para o arquivo no diretório static
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == "__main__":
     # Use a porta 8080 se executando localmente
