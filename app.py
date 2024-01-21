@@ -173,7 +173,7 @@ def consulta():
         # Criar Excel com os dados
         excel_buffer = criar_excel_com_dados(data_frame_com_dados)
 
-        return send_file(excel_buffer, download_name='resultado_Consulta_IPs.xlsx', as_attachment=True)
+        return send_file(excel_buffer, download_name='resultados.xlsx', as_attachment=True)
 
     except Exception as e:
         return {'error': str(e)}
