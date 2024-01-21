@@ -1,6 +1,6 @@
 import pandas as pd
 import requests
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, send_file
 import io
 import os
 
@@ -26,8 +26,12 @@ def buscar_abuse_ip(ip_address):
 
 def processar_arquivo(file):
     try:
-        # Ler dados do arquivo em um buffer de bytes
-        file_buffer = io.BytesIO(file.read())
+        # Salvar dados do arquivo em um buffer de bytes
+        file_buffer = io.BytesIO()
+        file.save(file_buffer)
+        file_buffer.seek(0)
+        
+        # Ler o DataFrame diretamente do buffer
         data_frame = pd.read_excel(file_buffer)
 
         # Adicionar colunas para armazenar resultados
@@ -78,7 +82,6 @@ def processar_arquivo(file):
 
     except Exception as e:
         return {'error': str(e)}
-
 
 
 @app.route('/')
