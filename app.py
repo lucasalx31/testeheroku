@@ -91,6 +91,6 @@ def consulta():
         return {'error': str(e)}
 
 if __name__ == "__main__":
-    # Use a porta 8080 se executando localmente
+    # Use a porta 8080 se executando localmente ok
     port = 8080
     app.run(host='0.0.0.0', port=port)
