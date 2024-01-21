@@ -3,16 +3,73 @@ import requests
 from flask import Flask, render_template, request, send_file, redirect, url_for, send_from_directory
 import io
 import os
+import random
+import time
 
 app = Flask(__name__)
 
-# Chave de API (substitua por sua chave real)
-chave_api = "1a1567e352662065b726580c17ab22197f40cb72601994f3a9eb491ac39c4a0772a47345c62ed923"
+# Chaves de API 
+chaves_api = ["1a1567e352662065b726580c17ab22197f40cb72601994f3a9eb491ac39c4a0772a47345c62ed923",
+              "7137ed136f3c82f122cf0f58a881353850f40d9b3f9064f87258a21dd76e9da4c494d7d936b8f258",
+              "4e0ff4e4dc8183e66aa93a6e4d9b3f7c4fc36753e1b706464f4b8630aeae7d21734eecebcb7c9f59",
+              "75277ec9a079f414c3189d1f1a5fee817c278d10e80dba6c6383559a26644400c2e0ba6c8b61a272",
+              "7e73bfc9677d4733416ab07477f432d555784d98916d68495e094498643be6c3e85f6d56f3e3ecf7"]
+
+# Transformar a lista de chaves em uma única string separada por vírgulas
+chave_api = ','.join(chaves_api)
+
+# Tempo mínimo para aguardar antes de tentar novamente com uma chave diferente (em segundos)
+tempo_espera_minimo = 60
+
+# Dicionário para rastrear o estado de cada chave (ativa ou inativa)
+estado_chaves = {chave: 'ativa' for chave in chaves_api}
+
+def obter_chave_api_aleatoria():
+    # Filtrar chaves que estão ativas
+    chaves_disponiveis = [chave for chave in chaves_api if estado_chaves[chave] == 'ativa']
+    
+    if not chaves_disponiveis:
+        # Se nenhuma chave estiver disponível, esperar e tentar novamente
+        time.sleep(tempo_espera_minimo)
+        return obter_chave_api_aleatoria()
+
+    return random.choice(chaves_disponiveis)
+
+def verificar_limite_chave(chave):
+    url = 'https://api.abuseipdb.com/api/v2/check'
+    querystring = {'ipAddress': '8.8.8.8', 'maxAgeInDays': '90'}
+    headers = {'Accept': 'application/json', 'Key': chave}
+
+    try:
+        response = requests.get(url, headers=headers, params=querystring)
+        response.raise_for_status()
+        decoded_response = response.json()
+
+        # Verifica se a resposta contém informações sobre limites
+        if 'errors' in decoded_response:
+            for error in decoded_response['errors']:
+                if 'status' in error and error['status'] == 429:
+                    # A chave atingiu o limite, marque como inativa
+                    estado_chaves[chave] = 'inativa'
+                    print(f"A chave {chave} atingiu o limite. Marcada como inativa.")
+                    return False
+
+        return True
+
+    except requests.RequestException as e:
+        return {'error': f"Erro na chamada à API: {e}"}
 
 def buscar_abuse_ip(ip_address):
     url = 'https://api.abuseipdb.com/api/v2/check'
     querystring = {'ipAddress': ip_address, 'maxAgeInDays': '90'}
-    headers = {'Accept': 'application/json', 'Key': chave_api}
+    
+    chave_atual = obter_chave_api_aleatoria()
+    
+    # Adicionar lógica para verificar se a chave atingiu o limite antes de fazer a chamada à API
+    while not verificar_limite_chave(chave_atual):
+        chave_atual = obter_chave_api_aleatoria()
+
+    headers = {'Accept': 'application/json', 'Key': chave_atual}
 
     try:
         response = requests.get(url, headers=headers, params=querystring)
@@ -23,6 +80,8 @@ def buscar_abuse_ip(ip_address):
 
     except requests.RequestException as e:
         return {'error': f"Erro na chamada à API: {e}"}
+
+
 
 def ler_dados_do_arquivo(file):
     try:
