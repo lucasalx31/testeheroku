@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta IP</title>
+    <style>
+        body {
+            background-image: url("https://images.squarespace-cdn.com/content/v1/61b3141f36086828c02b0f5b/1645014175579-MYHTMDU3JX47YQT7XRAJ/Royalties-atos.jpg");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: rgba(200, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        #loading-spinner, #success-message, #progress-message {
+            display: none;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #success-message {
+            font-size: 18px;
+            color: green;
+            cursor: pointer;
+            animation: fadein 2s; /* Adiciona animação de fade in */
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <!-- Adicione qualquer outro link ou estilo aqui -->
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Consulta de IP</h1>
+        <form id="upload-form" method="post" enctype="multipart/form-data" action="/consulta">        
+            <div class="form-group">
+                <!-- Adicione um elemento span para mostrar o nome do arquivo -->
+                <label for="fileInput" class="custom-file-upload">
+                    <span id="file-name">Selecionar Arquivo Excel</span>
+                </label>
+                <input type="file" id="fileInput" name="file" accept=".xlsx" required style="display: none;"
+                    onchange="updateFileName()">
+            </div>
+            <button type="button" id="submitBtn" class="btn btn-primary" onclick="submitForm()">Executar Consulta
+            </button>
+            <button type="button" id="stopBtn" class="btn btn-danger" onclick="pararConsulta()" disabled>Parar Consulta
+            </button>
+        </form>
+
+        <!-- Mensagem de carregamento -->
+        <div id="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Carregando...</span>
+            </div>
+        </div>
+
+        <!-- Mensagem de sucesso -->
+        <div id="success-message">Consulta Finalizada com Sucesso! Clique em qualquer lugar para ocultar.</div>
+
+        <!-- Mensagem de progresso -->
+        <div id="progress-message">Realizando consulta...</div>
+    </div>
+
+    <!-- Adicione qualquer outro script ou link de script aqui -->
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <!-- Se você precisar de scripts adicionais, você pode adicionar aqui -->
+    <!-- Certifique-se de incluir apenas o que é necessário para a funcionalidade da sua página -->
+    <script>
+        // Variável global para armazenar o estado da consulta
+        var consultaEmAndamento = false;
+
+        function updateFileName() {
+            // Atualiza o texto do elemento span com o nome do arquivo escolhido
+            const fileInput = document.getElementById('fileInput');
+            const fileNameSpan = document.getElementById('file-name');
+
+            if (fileInput.files.length > 0) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+            } else {
+                fileNameSpan.textContent = 'Selecionar Arquivo Excel';
+            }
+        }
+
+        function submitForm() {
+            // Verifica se um arquivo foi selecionado
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                alert("Selecione um arquivo Excel antes de executar a consulta.");
+                return;
+            }
+
+            // Desativa o botão durante a consulta
+            $("#submitBtn").prop("disabled", true);
+            $("#stopBtn").prop("disabled", false); // Habilita o botão de parar
+
+            // Exibe a mensagem de carregamento
+            var loadingSpinner = $("#loading-spinner");
+            loadingSpinner.show();
+
+            // Envia o formulário para o servidor
+            $("#upload-form").submit();
+        }
+
+        // Função para parar a consulta
+        function pararConsulta() {
+            // Atualiza o estado da consulta
+            consultaEmAndamento = false;
+
+            // Oculta a mensagem de carregamento
+            var loadingSpinner = $("#loading-spinner");
+            loadingSpinner.hide();
+
+            // Exibe a mensagem de sucesso
+            var successMessage = $("#success-message");
+            successMessage.show();
+
+            // Reativa o botão de executar consulta e desativa o botão de parar
+            $("#submitBtn").prop("disabled", false);
+            $("#stopBtn").prop("disabled", true);
+        }
+
+        // Adiciona um evento de clique para ocultar a mensagem de sucesso
+        var successMessage = $("#success-message");
+        successMessage.on("click", function () {
+            successMessage.hide();
+        });
+    </script>
+</body>
+
+</html>

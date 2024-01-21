@@ -1,0 +1,114 @@
+body {
+    background-image: url("https://images.squarespace-cdn.com/content/v1/61b3141f36086828c02b0f5b/1645014175579-MYHTMDU3JX47YQT7XRAJ/Royalties-atos.jpg");
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.custom-file-upload {
+    border: 2px solid #007bff;
+    color: #020202;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.custom-file-upload:hover {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.container {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(2, 129, 233, 0.945);
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    top: 50px; /* Ajuste a quantidade desejada para a margem superior */
+}
+
+h1 {
+    color: #007bff;
+}
+
+/* Restante do seu CSS permanece o mesmo */
+
+
+
+
+h1 {
+    color: #007bff;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.custom-file-upload {
+    border: 2px solid #007bff;
+    color: #007bff;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 10px;  /* Adicionado para melhor espaçamento */
+}
+
+.custom-file-upload:hover {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+#fileInput {
+    display: none;
+}
+
+#submitBtn {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#submitBtn:hover {
+    background-color: #000000;
+}
+
+#progress-container {
+    display: none;
+    margin-top: 25px;
+    text-align: center;
+}
+
+#progress-message {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.progress {
+    height: 25px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-radius: 5px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background-color: #007bff;
+    color: #ffffff;
+    line-height: 25px;
+    font-size: 14px;
+}
