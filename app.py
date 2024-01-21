@@ -1,6 +1,6 @@
 import pandas as pd
 import requests
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, redirect, url_for
 import io
 import os
 
@@ -24,16 +24,22 @@ def buscar_abuse_ip(ip_address):
     except requests.RequestException as e:
         return {'error': f"Erro na chamada à API: {e}"}
 
-def processar_arquivo(file):
+def ler_dados_do_arquivo(file):
     try:
-        # Salvar dados do arquivo em um buffer de bytes
+        # Ler dados do arquivo em um buffer de bytes
         file_buffer = io.BytesIO()
         file.save(file_buffer)
         file_buffer.seek(0)
         
-        # Ler o DataFrame diretamente do buffer
         data_frame = pd.read_excel(file_buffer)
 
+        return data_frame
+
+    except Exception as e:
+        raise Exception(f"Erro ao ler dados do arquivo: {e}")
+
+def adicionar_dados_ao_dataframe(data_frame):
+    try:
         # Adicionar colunas para armazenar resultados
         data_frame['ipAddress'] = ''
         data_frame['isPublic'] = ''
@@ -50,29 +56,13 @@ def processar_arquivo(file):
         data_frame['numDistinctUsers'] = ''
         data_frame['lastReportedAt'] = ''
 
-        # Buscar informações do IP para cada linha
-        for index, row in data_frame.iterrows():
-            ip_address = row['Source']
-            result = buscar_abuse_ip(ip_address)
+        return data_frame
 
-            if 'error' not in result:
-                decoded_response = result.get('data', {})
-                # Adiciona os dados ao DataFrame
-                data_frame.at[index, 'ipAddress'] = decoded_response.get('ipAddress', '')
-                data_frame.at[index, 'isPublic'] = decoded_response.get('isPublic', '')
-                data_frame.at[index, 'ipVersion'] = decoded_response.get('ipVersion', '')
-                data_frame.at[index, 'isWhitelisted'] = decoded_response.get('isWhitelisted', '')
-                data_frame.at[index, 'abuseConfidenceScore'] = decoded_response.get('abuseConfidenceScore', '')
-                data_frame.at[index, 'countryCode'] = decoded_response.get('countryCode', '')
-                data_frame.at[index, 'usageType'] = decoded_response.get('usageType', '')
-                data_frame.at[index, 'isp'] = decoded_response.get('isp', '')
-                data_frame.at[index, 'domain'] = decoded_response.get('domain', '')
-                data_frame.at[index, 'hostnames'] = decoded_response.get('hostnames', '')
-                data_frame.at[index, 'isTor'] = decoded_response.get('isTor', '')
-                data_frame.at[index, 'totalReports'] = decoded_response.get('totalReports', '')
-                data_frame.at[index, 'numDistinctUsers'] = decoded_response.get('numDistinctUsers', '')
-                data_frame.at[index, 'lastReportedAt'] = decoded_response.get('lastReportedAt', '')
+    except Exception as e:
+        raise Exception(f"Erro ao adicionar dados ao DataFrame: {e}")
 
+def criar_excel_com_dados(data_frame):
+    try:
         # Criar um buffer de bytes
         excel_buffer = io.BytesIO()
         data_frame.to_excel(excel_buffer, index=False, sheet_name='Sheet1')
@@ -81,8 +71,7 @@ def processar_arquivo(file):
         return excel_buffer
 
     except Exception as e:
-        return {'error': str(e)}
-
+        raise Exception(f"Erro ao criar arquivo Excel: {e}")
 
 @app.route('/')
 def index():
@@ -92,8 +81,18 @@ def index():
 def consulta():
     try:
         file = request.files['file']
-        excel_buffer = processar_arquivo(file)
+
+        # Ler dados do arquivo
+        data_frame = ler_dados_do_arquivo(file)
+
+        # Adicionar dados ao DataFrame
+        data_frame_com_dados = adicionar_dados_ao_dataframe(data_frame)
+
+        # Criar Excel com os dados
+        excel_buffer = criar_excel_com_dados(data_frame_com_dados)
+
         return send_file(excel_buffer, download_name='resultados.xlsx', as_attachment=True)
+
     except Exception as e:
         return {'error': str(e)}
 
