@@ -1,12 +1,11 @@
 import pandas as pd
 import requests
-from flask import Flask, render_template, request, send_file, send_from_directory
+from flask import Flask, render_template, request, send_file, redirect, url_for, send_from_directory
 import io
 import os
 import random
 import time
-from celery import Celery
-from your_module import process_data
+
 app = Flask(__name__)
 
 # Chaves de API 
@@ -168,10 +167,13 @@ def consulta():
         # Ler dados do arquivo
         data_frame = ler_dados_do_arquivo(file)
 
-        # Enviar tarefa Celery para processamento assíncrono
-        result = process_data.delay(data_frame)
+        # Adicionar dados ao DataFrame
+        data_frame_com_dados = adicionar_dados_ao_dataframe(data_frame)
 
-        return {'task_id': result.id}
+        # Criar Excel com os dados
+        excel_buffer = criar_excel_com_dados(data_frame_com_dados)
+
+        return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
 
     except Exception as e:
         return {'error': str(e)}

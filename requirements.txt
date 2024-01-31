@@ -1,8 +1,5 @@
 Flask
-gunicorn
 Flask-CORS
 pandas
 requests
 openpyxl
-Celery
-redis
