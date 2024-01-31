@@ -5,11 +5,9 @@ import io
 import os
 import random
 import time
-import signal
-
+from celery import Celery
+from your_module import process_data
 app = Flask(__name__)
-
-# ... (Código existente)
 
 # Chaves de API 
 chaves_api = ["1a1567e352662065b726580c17ab22197f40cb72601994f3a9eb491ac39c4a0772a47345c62ed923",
@@ -84,6 +82,8 @@ def buscar_abuse_ip(ip_address):
     except requests.RequestException as e:
         return {'error': f"Erro na chamada à API: {e}"}
 
+
+
 def ler_dados_do_arquivo(file):
     try:
         # Ler dados do arquivo em um buffer de bytes
@@ -156,19 +156,6 @@ def criar_excel_com_dados(data_frame):
     except Exception as e:
         raise Exception(f"Erro ao criar arquivo Excel: {e}")
 
-# Configurar o tempo limite em segundos
-timeout_seconds = 800
-
-def timeout_handler(signum, frame):
-    raise TimeoutError("A execução excedeu o tempo limite.")
-
-@app.before_request
-def before_request():
-    # Configurar o sinal de timeout
-    signal.signal(signal.SIGALRM, timeout_handler)
-    # Configurar o tempo limite em segundos
-    signal.alarm(timeout_seconds)
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -181,20 +168,13 @@ def consulta():
         # Ler dados do arquivo
         data_frame = ler_dados_do_arquivo(file)
 
-        # Adicionar dados ao DataFrame
-        data_frame_com_dados = adicionar_dados_ao_dataframe(data_frame)
+        # Enviar tarefa Celery para processamento assíncrono
+        result = process_data.delay(data_frame)
 
-        # Criar Excel com os dados
-        excel_buffer = criar_excel_com_dados(data_frame_com_dados)
-
-        return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
+        return {'task_id': result.id}
 
     except Exception as e:
         return {'error': str(e)}
-
-    finally:
-        # Desativar o sinal de timeout após a conclusão da rota
-        signal.alarm(0)
 
 # Mapear o endpoint /favicon.ico para o arquivo no diretório static
 @app.route('/favicon.ico')

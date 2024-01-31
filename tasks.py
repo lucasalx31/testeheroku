@@ -5,7 +5,7 @@ celery = Celery(
     'tasks',
     broker='redis://localhost:6379/0',
     backend='redis://localhost:6379/0',
-    include=['app.py']
+    include=['your_module']
 )
 
 if __name__ == "__main__":
