@@ -5,7 +5,7 @@ import io
 import os
 import random
 import time
-
+import asyncio
 app = Flask(__name__)
 
 # Chaves de API 
@@ -173,7 +173,13 @@ def consulta():
         # Criar Excel com os dados
         excel_buffer = criar_excel_com_dados(data_frame_com_dados)
 
-        return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
+        async def send_excel():
+            await asyncio.sleep(0)  # Permite que outros eventos sejam executados
+            return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(send_excel())
 
     except Exception as e:
         return {'error': str(e)}
