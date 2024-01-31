@@ -1,12 +1,15 @@
 import pandas as pd
 import requests
-from flask import Flask, render_template, request, send_file, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, send_file, send_from_directory
 import io
 import os
 import random
 import time
+import signal
 
 app = Flask(__name__)
+
+# ... (Código existente)
 
 # Chaves de API 
 chaves_api = ["1a1567e352662065b726580c17ab22197f40cb72601994f3a9eb491ac39c4a0772a47345c62ed923",
@@ -81,8 +84,6 @@ def buscar_abuse_ip(ip_address):
     except requests.RequestException as e:
         return {'error': f"Erro na chamada à API: {e}"}
 
-
-
 def ler_dados_do_arquivo(file):
     try:
         # Ler dados do arquivo em um buffer de bytes
@@ -155,6 +156,19 @@ def criar_excel_com_dados(data_frame):
     except Exception as e:
         raise Exception(f"Erro ao criar arquivo Excel: {e}")
 
+# Configurar o tempo limite em segundos
+timeout_seconds = 800
+
+def timeout_handler(signum, frame):
+    raise TimeoutError("A execução excedeu o tempo limite.")
+
+@app.before_request
+def before_request():
+    # Configurar o sinal de timeout
+    signal.signal(signal.SIGALRM, timeout_handler)
+    # Configurar o tempo limite em segundos
+    signal.alarm(timeout_seconds)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -177,6 +191,10 @@ def consulta():
 
     except Exception as e:
         return {'error': str(e)}
+
+    finally:
+        # Desativar o sinal de timeout após a conclusão da rota
+        signal.alarm(0)
 
 # Mapear o endpoint /favicon.ico para o arquivo no diretório static
 @app.route('/favicon.ico')
