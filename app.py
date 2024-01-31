@@ -1,3 +1,4 @@
+import nest_asyncio
 import pandas as pd
 import requests
 from flask import Flask, render_template, request, send_file, send_from_directory
@@ -5,6 +6,9 @@ import io
 import os
 import random
 import time
+import asyncio
+
+nest_asyncio.apply()
 
 app = Flask(__name__)
 
@@ -92,7 +96,7 @@ def ler_dados_do_arquivo(file):
     except Exception as e:
         raise Exception(f"Erro ao ler dados do arquivo: {e}")
 
-def adicionar_dados_ao_dataframe(data_frame):
+async def adicionar_dados_ao_dataframe_async(data_frame):
     try:
         # Adicionar colunas para armazenar resultados
         data_frame['ipAddress'] = ''
@@ -110,11 +114,13 @@ def adicionar_dados_ao_dataframe(data_frame):
         data_frame['numDistinctUsers'] = ''
         data_frame['lastReportedAt'] = ''
 
-        # Buscar informações do IP para cada linha
-        for index, row in data_frame.iterrows():
-            ip_address = row['Source']
-            result = buscar_abuse_ip(ip_address)
+        # Lista para armazenar as tarefas de consulta
+        tasks = []
 
+        # Função assíncrona para buscar informações do IP
+        async def buscar_e_adicionar_abuse_ip(ip_address, index):
+            nonlocal data_frame
+            result = await buscar_abuse_ip(ip_address)
             if 'error' not in result:
                 decoded_response = result.get('data', {})
                 # Adiciona os dados ao DataFrame
@@ -133,12 +139,22 @@ def adicionar_dados_ao_dataframe(data_frame):
                 data_frame.at[index, 'numDistinctUsers'] = decoded_response.get('numDistinctUsers', '')
                 data_frame.at[index, 'lastReportedAt'] = decoded_response.get('lastReportedAt', '')
 
+        # Adiciona tarefas de consulta à lista de tarefas
+        for index, row in data_frame.iterrows():
+            ip_address = row['Source']
+            task = buscar_e_adicionar_abuse_ip(ip_address, index)
+            tasks.append(task)
+
+        # Aguarda a conclusão de todas as tarefas
+        await asyncio.gather(*tasks)
+
         return data_frame
 
     except Exception as e:
         raise Exception(f"Erro ao adicionar dados ao DataFrame: {e}")
 
-def criar_excel_com_dados(data_frame):
+
+async def criar_excel_com_dados_async(data_frame):
     try:
         # Criar um buffer de bytes
         excel_buffer = io.BytesIO()
@@ -155,20 +171,24 @@ def index():
     return render_template('index.html')
 
 @app.route('/consulta', methods=['POST'])
-def consulta():
+async def consulta():
     try:
         file = request.files['file']
 
         # Ler dados do arquivo
         data_frame = ler_dados_do_arquivo(file)
 
-        # Adicionar dados ao DataFrame
-        data_frame_com_dados = adicionar_dados_ao_dataframe(data_frame)
+        # Adicionar dados ao DataFrame assincronamente
+        data_frame_com_dados = await adicionar_dados_ao_dataframe_async(data_frame)
 
         # Criar Excel com os dados
-        excel_buffer = criar_excel_com_dados(data_frame_com_dados)
+        excel_buffer = await criar_excel_com_dados_async(data_frame_com_dados)
 
-        return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
+        async def send_excel():
+            await asyncio.sleep(0)  # Permite que outros eventos sejam executados
+            return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
+
+        return await send_excel()
 
     except Exception as e:
         return {'error': str(e)}
@@ -181,4 +201,4 @@ def favicon():
 if __name__ == "__main__":
     # Use a porta 8080 se executando localmente
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port, threaded=True, debug=True)
+    app.run(host='0.0.0.0', port=port, threaded=True, debug=True, use_reloader=False)
