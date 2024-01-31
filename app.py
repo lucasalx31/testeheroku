@@ -1,11 +1,11 @@
 import pandas as pd
 import requests
-from flask import Flask, render_template, request, send_file, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, send_file, send_from_directory
 import io
 import os
 import random
 import time
-import asyncio
+
 app = Flask(__name__)
 
 # Chaves de API 
@@ -14,9 +14,6 @@ chaves_api = ["1a1567e352662065b726580c17ab22197f40cb72601994f3a9eb491ac39c4a077
               "4e0ff4e4dc8183e66aa93a6e4d9b3f7c4fc36753e1b706464f4b8630aeae7d21734eecebcb7c9f59",
               "75277ec9a079f414c3189d1f1a5fee817c278d10e80dba6c6383559a26644400c2e0ba6c8b61a272",
               "7e73bfc9677d4733416ab07477f432d555784d98916d68495e094498643be6c3e85f6d56f3e3ecf7"]
-
-# Transformar a lista de chaves em uma única string separada por vírgulas
-chave_api = ','.join(chaves_api)
 
 # Tempo mínimo para aguardar antes de tentar novamente com uma chave diferente (em segundos)
 tempo_espera_minimo = 60
@@ -80,8 +77,6 @@ def buscar_abuse_ip(ip_address):
 
     except requests.RequestException as e:
         return {'error': f"Erro na chamada à API: {e}"}
-
-
 
 def ler_dados_do_arquivo(file):
     try:
@@ -173,13 +168,7 @@ def consulta():
         # Criar Excel com os dados
         excel_buffer = criar_excel_com_dados(data_frame_com_dados)
 
-        async def send_excel():
-            await asyncio.sleep(0)  # Permite que outros eventos sejam executados
-            return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
-
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop.run_until_complete(send_excel())
+        return send_file(excel_buffer, download_name='Resultado Consulta de IPs.xlsx', as_attachment=True)
 
     except Exception as e:
         return {'error': str(e)}
@@ -192,4 +181,4 @@ def favicon():
 if __name__ == "__main__":
     # Use a porta 8080 se executando localmente
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, threaded=True, debug=True)
