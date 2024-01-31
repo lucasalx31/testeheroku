@@ -4,3 +4,5 @@ Flask-CORS
 pandas
 requests
 openpyxl
+Celery
+redis
