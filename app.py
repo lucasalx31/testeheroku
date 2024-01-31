@@ -19,7 +19,7 @@ chaves_api = ["1a1567e352662065b726580c17ab22197f40cb72601994f3a9eb491ac39c4a077
 chave_api = ','.join(chaves_api)
 
 # Tempo mínimo para aguardar antes de tentar novamente com uma chave diferente (em segundos)
-tempo_espera_minimo = 60000
+tempo_espera_minimo = 60
 
 # Dicionário para rastrear o estado de cada chave (ativa ou inativa)
 estado_chaves = {chave: 'ativa' for chave in chaves_api}

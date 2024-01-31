@@ -1,4 +1,5 @@
 Flask
+gunicorn
 Flask-CORS
 pandas
 requests
